@@ -15,8 +15,6 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/loca
 # Runtime image
 FROM debian:bullseye-slim
 
-RUN apt-get update && apt-get install -y libclang-dev libsundials-dev
-
 # Run as "app" user
 RUN useradd -ms /bin/bash app
 
@@ -26,12 +24,21 @@ WORKDIR /app
 # Get compiled binaries from builder's cargo install directory
 COPY --from=builder /usr/src/app/diffeq-backend /app/diffeq-backend
 
+# Copy libs
+RUN mkdir -p /usr/lib/x86_64-linux-gnu
+RUN mkdir -p /lib/x86_64-linux-gnu
+COPY --from=builder /lib/x86_64-linux-gnu/libffi*  /lib/x86_64-linux-gnu/
+#COPY --from=builder /lib/x86_64-linux-gnu/libstdc++*  /lib/x86_64-linux-gnu/
+#COPY --from=builder /lib/x86_64-linux-gnu/libgcc*  /lib/x86_64-linux-gnu/
+COPY --from=builder /lib/x86_64-linux-gnu/libc*  /lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libsundials*  /usr/lib/x86_64-linux-gnu/
 
 # Get wasm libs from host machine (remember to build them first!)
 COPY ./libs/lib /app/lib
 
 # Set LIBRARY_PATH to point to the wasm libs
 ENV LIBRARY_PATH /app/lib
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu
 
 # Run the app
 CMD ./diffeq-backend
