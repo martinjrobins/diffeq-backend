@@ -1,5 +1,9 @@
 FROM rust:latest as builder
 
+# Install deps (clang, llvm, sundials, cmake)
+RUN apt-get update && apt-get install -y clang libclang-dev libsundials-dev cmake llvm-14-dev llvm-14 libpolly-14-dev
+ENV LLVM_SYS_140_PREFIX /usr
+
 WORKDIR /usr/src/app
 COPY . .
 
@@ -11,6 +15,8 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/loca
 # Runtime image
 FROM debian:bullseye-slim
 
+RUN apt-get update && apt-get install -y libclang-dev libsundials-dev
+
 # Run as "app" user
 RUN useradd -ms /bin/bash app
 
@@ -19,6 +25,7 @@ WORKDIR /app
 
 # Get compiled binaries from builder's cargo install directory
 COPY --from=builder /usr/src/app/diffeq-backend /app/diffeq-backend
+
 
 # Get wasm libs from host machine (remember to build them first!)
 COPY ./libs/lib /app/lib
