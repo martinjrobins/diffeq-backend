@@ -1,2 +1,4 @@
 /target
 .vscode/*
+libs/lib
+libs/include

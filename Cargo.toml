@@ -5,18 +5,18 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[net]
-git-fetch-with-cli = true   # use the `git` executable for git operations
-
 [dependencies]
 axum = "0.6.20"
 serde = { version = "1.0.187", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-diffeq = { path = "../diffeq" }
+diffeq = { path = "libs/diffeq" }
 tempfile = "3.8.0"
 tokio-util = { version = "0.7.8", features = ["io"] }
 anyhow = "1.0.75"
 hyper = "0.14.27"
+tower-http = { version = "0.4.4", features = ["cors", "trace"] }
+tracing-subscriber = "0.3.17"
+tracing = "0.1.37"
 
 [dev-dependencies]
 tower = { version = "0.4", features = ["util"] }

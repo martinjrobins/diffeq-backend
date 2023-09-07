@@ -1,13 +1,20 @@
 use axum::{routing::{post, get}, Router, extract, response::{Response, IntoResponse}, body::StreamBody, http::{header, HeaderMap, StatusCode}};
+use hyper::Method;
 use tokio_util::io::ReaderStream;
 use std::{net::SocketAddr, path::Path, env::temp_dir};
 use serde::{Deserialize, Serialize};
 use diffeq::compile_text;
+use tower_http::cors::{CorsLayer, Any};
+use tower_http::trace::TraceLayer;
+
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
     let app = app(); 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -15,9 +22,17 @@ async fn main() {
 }
 
 fn app() -> Router {
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(vec![header::ACCEPT, header::CONTENT_TYPE]);
     Router::new()
         .route("/", get(hello_world))
         .route("/compile", post(compile))
+        .layer(TraceLayer::new_for_http())
+        .layer(cors)
 }
 
 
@@ -32,7 +47,6 @@ async fn hello_world() -> &'static str {
 }
 
 async fn compile(extract::Json(payload): extract::Json<CompileRequest>) -> Result<Response, AppError> {
-    println!("Received request: {:?}", payload);
     let filepath= temp_dir().join("model.wasm");
     let filename = filepath.into_os_string().into_string().unwrap();
     let options = diffeq::CompilerOptions {
@@ -88,8 +102,6 @@ mod tests {
     };
     use tokio::io::AsyncWriteExt;
     use tower::ServiceExt;
-    use wasmtime::{Engine, Module, Store, Instance}; // for `oneshot` and `ready`
-
 
     #[tokio::test]
     async fn hello() {
@@ -164,21 +176,5 @@ mod tests {
         }
 
         assert_eq!(status, StatusCode::OK);
-        
-        println!("Compiling module...");
-        let engine = Engine::default();
-        let module = Module::from_binary(&engine, &body).unwrap();
-        let mut store: Store<()> = Store::default();
-        let _instance = Instance::new(&mut store, &module, &[]).unwrap();
-
-        // Next we poke around a bit to extract the `run` function from the module.
-        println!("Extracting export...");
-        //let run = instance.get_typed_func::<(), ()>(&mut store, "run")?;
-
-        // And last but not least we can call it!
-        println!("Calling export...");
-        //run.call(&mut store, ())?;
-
-        println!("Done.");
     }
 }
