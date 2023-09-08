@@ -25,15 +25,6 @@ WORKDIR /app
 # Get compiled binaries from builder's cargo install directory
 COPY --from=builder /usr/src/app/diffeq-backend /app/diffeq-backend
 
-# Copy libs
-#RUN mkdir -p /usr/lib/x86_64-linux-gnu
-#RUN mkdir -p /lib/x86_64-linux-gnu
-#COPY --from=builder /lib/x86_64-linux-gnu/libffi*  /lib/x86_64-linux-gnu/
-#COPY --from=builder /lib/x86_64-linux-gnu/libstdc++*  /lib/x86_64-linux-gnu/
-#COPY --from=builder /lib/x86_64-linux-gnu/libgcc*  /lib/x86_64-linux-gnu/
-#COPY --from=builder /lib/x86_64-linux-gnu/libc*  /lib/x86_64-linux-gnu/
-#COPY --from=builder /usr/lib/x86_64-linux-gnu/libsundials*  /usr/lib/x86_64-linux-gnu/
-
 # Get wasm libs from host machine (remember to build them first!)
 COPY ./libs/lib /app/lib
 
