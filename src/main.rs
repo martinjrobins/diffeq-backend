@@ -14,7 +14,7 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
     let app = app(); 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

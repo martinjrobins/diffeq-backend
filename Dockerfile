@@ -13,7 +13,8 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/loca
     cargo build --release && mv ./target/release/diffeq-backend ./diffeq-backend
 
 # Runtime image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y libsundials-dev libffi8 libc6
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
@@ -25,13 +26,13 @@ WORKDIR /app
 COPY --from=builder /usr/src/app/diffeq-backend /app/diffeq-backend
 
 # Copy libs
-RUN mkdir -p /usr/lib/x86_64-linux-gnu
-RUN mkdir -p /lib/x86_64-linux-gnu
-COPY --from=builder /lib/x86_64-linux-gnu/libffi*  /lib/x86_64-linux-gnu/
+#RUN mkdir -p /usr/lib/x86_64-linux-gnu
+#RUN mkdir -p /lib/x86_64-linux-gnu
+#COPY --from=builder /lib/x86_64-linux-gnu/libffi*  /lib/x86_64-linux-gnu/
 #COPY --from=builder /lib/x86_64-linux-gnu/libstdc++*  /lib/x86_64-linux-gnu/
 #COPY --from=builder /lib/x86_64-linux-gnu/libgcc*  /lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libc*  /lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libsundials*  /usr/lib/x86_64-linux-gnu/
+#COPY --from=builder /lib/x86_64-linux-gnu/libc*  /lib/x86_64-linux-gnu/
+#COPY --from=builder /usr/lib/x86_64-linux-gnu/libsundials*  /usr/lib/x86_64-linux-gnu/
 
 # Get wasm libs from host machine (remember to build them first!)
 COPY ./libs/lib /app/lib
