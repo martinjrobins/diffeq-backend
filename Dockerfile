@@ -14,12 +14,21 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/loca
 
 # Runtime image
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y libsundials-dev libffi8 libc6
+RUN apt-get update && apt-get install -y libsundials-dev libffi8 libc6 git tar xz-utils lbzip2
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
 
 USER app
+WORKDIR /app
+
+# emscripten
+RUN git clone https://github.com/emscripten-core/emsdk.git 
+WORKDIR /app/emsdk
+RUN git pull
+RUN ./emsdk install latest
+RUN ./emsdk activate latest
+
 WORKDIR /app
 
 # Get compiled binaries from builder's cargo install directory
@@ -30,7 +39,8 @@ COPY ./libs/lib /app/lib
 
 # Set LIBRARY_PATH to point to the wasm libs
 ENV LIBRARY_PATH /app/lib
-ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu
+ENV PATH /app/emsdk:/app/emsdk/upstream/emscripten:${PATH}
+ENV EMSDK /app/emsdk
 
 # Run the app
 CMD ./diffeq-backend
