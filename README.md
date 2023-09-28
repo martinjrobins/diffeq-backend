@@ -36,3 +36,10 @@ make install
 ```
 
 This should put the runtime in `libs/lib`, and the headers in `libs/include`.
+
+
+## Deploy
+
+```bash
+fly deploy
+```

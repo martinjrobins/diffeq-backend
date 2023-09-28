@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rust:bookworm as builder
 
 # Install deps (clang, llvm, sundials, cmake)
 RUN apt-get update && apt-get install -y clang libclang-dev libsundials-dev cmake llvm-14-dev llvm-14 libpolly-14-dev
