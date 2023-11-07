@@ -22,7 +22,7 @@ Then, set your environment using emsdk
 source /path/to/emsdk/emsdk_env.sh
 ```
 
-Then, configure
+Then, configure (below won't work, consult diffeq-runtime README)
 
 ```bash
 emcmake cmake -DCMAKE_INSTALL_PREFIX=../../ -DCMAKE_BUILD_TYPE=Release ..

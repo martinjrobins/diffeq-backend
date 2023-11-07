@@ -50,7 +50,7 @@ async fn compile(extract::Json(payload): extract::Json<CompileRequest>) -> Resul
     let filepath= temp_dir().join("model.wasm");
     let filename = filepath.into_os_string().into_string().unwrap();
     let options = diffeq::CompilerOptions {
-        compile: false,
+        bitcode_only: false,
         wasm: true,
         standalone: false,
     };
