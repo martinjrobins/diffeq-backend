@@ -28,6 +28,21 @@ Then, configure (below won't work, consult diffeq-runtime README)
 emcmake cmake -DCMAKE_INSTALL_PREFIX=../../ -DCMAKE_BUILD_TYPE=Release ..
 ```
 
+## Install EnzymeAD
+
+Note: remember to deactivate emsdk environment!
+
+```bash
+cd libs
+git clone https://github.com/EnzymeAD/Enzyme
+cd Enzyme
+mkdir build
+cd build
+cmake  ../enzyme -DLLVM_DIR=/usr/lib/llvm-14 -DCMAKE_INSTALL_PREFIX=../../ -DCMAKE_BUILD_TYPE=Release ..
+make
+make install
+```
+
 
 Then, build and install
 
