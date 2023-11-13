@@ -59,7 +59,7 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/loca
 
 # Runtime image
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y libffi8 libc6 git tar xz-utils lbzip2
+RUN apt-get update && apt-get install -y clang llvm-14
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
@@ -68,19 +68,19 @@ USER app
 WORKDIR /app
 
 # Copy Emscripten SDK from builder, this will include openblas, suite-sparse, and diffeq-runtime
-COPY --from=builder /usr/src/emsdk /app/emsdk
+COPY --from=builder --chown=app /usr/src/emsdk /usr/src/emsdk
 
 # Copy EnzymeAD from builder
 RUN mkdir -p /app/lib
-COPY --from=builder /usr/src/Enzyme/build/*.so /app/lib/
+COPY --from=builder --chown=app /usr/src/Enzyme/build/Enzyme/*.so /app/lib/
 
 # Get compiled binaries from builder's cargo install directory
-COPY --from=builder /usr/src/app/diffeq-backend /app/diffeq-backend
+COPY --from=builder --chown=app /usr/src/app/diffeq-backend /app/diffeq-backend
 
 # Set LIBRARY_PATH to point to the wasm libs
 ENV LIBRARY_PATH /app/lib
-ENV PATH /app/emsdk:/app/emsdk/upstream/emscripten:${PATH}
-ENV EMSDK /app/emsdk
+ENV PATH /usr/src/emsdk:/usr/src/emsdk/upstream/emscripten:${PATH}
+ENV EMSDK /usr/src/emsdk
 
 # Run the app
 CMD ./diffeq-backend
