@@ -19,13 +19,16 @@ WORKDIR /usr/src/emsdk
 RUN git pull
 RUN ./emsdk install latest
 RUN ./emsdk activate latest
-RUN source ./emsdk_env.sh
+
+ENV EMSDK=/usr/src/emsdk \
+    PATH="/usr/src/emsdk:/usr/src/emsdk/upstream/emscripten:/usr/src/emsdk/node/16.20.0_64bit/bin:${PATH}"
 
 # Build openblas
 WORKDIR /usr/src
 RUN git clone https://github.com/OpenMathLib/OpenBLAS.git
 WORKDIR /usr/src/OpenBLAS
 RUN git checkout v0.3.24
+RUN emmake make libs shared CC=emcc HOSTCC=gcc TARGET=RISCV64_GENERIC NOFORTRAN=1 C_LAPACK=1 USE_THREAD=0 NO_SHARED=1 PREFIX=${EMSDK}/upstream/emscripten/cache/sysroot
 RUN emmake make install libs shared CC=emcc HOSTCC=gcc TARGET=RISCV64_GENERIC NOFORTRAN=1 C_LAPACK=1 USE_THREAD=0 NO_SHARED=1 PREFIX=${EMSDK}/upstream/emscripten/cache/sysroot
 
 # Build suite-sparse
