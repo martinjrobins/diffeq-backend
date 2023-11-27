@@ -46,7 +46,7 @@ COPY . .
 # Build diffeq-runtime
 RUN mkdir /usr/src/app/libs/diffeq-runtime/build
 WORKDIR /usr/src/app/libs/diffeq-runtime/build
-RUN emcmake cmake -DKLU_LIBRARY_DIR=${EMSDK}/upstream/emscripten/cache/sysroot/lib -DBUILD_SHARED_LIBS=OFF -DENABLE_KLU=ON -DTARGET=generic -DNOFORTRAN=1 -DNO_LAPACK=1 -DUSE_THREAD=0 ..
+RUN emcmake cmake -DKLU_LIBRARY_DIR=${EMSDK}/upstream/emscripten/cache/sysroot/lib -DBUILD_SHARED_LIBS=OFF -DENABLE_KLU=ON -DTARGET=generic -DNOFORTRAN=1 -DNO_LAPACK=1 -DUSE_THREAD=0  -DSUNDIALS_INDEX_SIZE=32 ..
 RUN make install
 
 # Build diffeq-backend
