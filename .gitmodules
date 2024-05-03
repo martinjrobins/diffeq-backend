@@ -1,6 +1,6 @@
 [submodule "libs/diffeq"]
 	path = libs/diffeq
-	url = git@github.com:martinjrobins/diffeq.git
+	url = git@github.com:martinjrobins/diffsl.git
 [submodule "libs/diffeq-runtime"]
 	path = libs/diffeq-runtime
 	url = git@github.com:martinjrobins/diffeq-runtime.git
