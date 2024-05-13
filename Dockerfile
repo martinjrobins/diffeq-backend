@@ -79,8 +79,10 @@ COPY --from=builder --chown=app /usr/src/app/diffeq-backend /app/diffeq-backend
 
 # Set LIBRARY_PATH to point to the wasm libs
 ENV LIBRARY_PATH /app/lib
+ENV LD_LIBRARY_PATH /app/lib
 ENV PATH /usr/src/emsdk:/usr/src/emsdk/upstream/emscripten:${PATH}
 ENV EMSDK /usr/src/emsdk
+ENV ENZYME_LIB=/app/lib/LLVMEnzyme-14.so
 
 # Run the app
 CMD ./diffeq-backend

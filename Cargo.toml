@@ -9,7 +9,7 @@ edition = "2021"
 axum = "0.6.20"
 serde = { version = "1.0.187", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-diffeq = { path = "libs/diffeq" }
+diffsl = { path = "libs/diffeq" }
 tempfile = "3.8.0"
 tokio-util = { version = "0.7.8", features = ["io"] }
 anyhow = "1.0.75"

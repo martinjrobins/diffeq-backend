@@ -1,19 +1,25 @@
-use axum::{routing::{post, get}, Router, extract, response::{Response, IntoResponse}, body::StreamBody, http::{header, HeaderMap, StatusCode}};
+use axum::{
+    body::StreamBody,
+    extract,
+    http::{header, HeaderMap, StatusCode},
+    response::{IntoResponse, Response},
+    routing::{get, post},
+    Router,
+};
+use diffsl::compile_text;
 use hyper::Method;
-use tokio_util::io::ReaderStream;
-use std::{net::SocketAddr, path::Path, env::temp_dir};
 use serde::{Deserialize, Serialize};
-use diffeq::compile_text;
-use tower_http::cors::{CorsLayer, Any};
+use std::{env::temp_dir, net::SocketAddr, path::Path};
+use tokio_util::io::ReaderStream;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
-
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
-    let app = app(); 
+    let app = app();
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -35,7 +41,6 @@ fn app() -> Router {
         .layer(cors)
 }
 
-
 #[derive(Deserialize, Serialize, Debug)]
 struct CompileRequest {
     text: String,
@@ -46,16 +51,24 @@ async fn hello_world() -> &'static str {
     "Hello, World!"
 }
 
-async fn compile(extract::Json(payload): extract::Json<CompileRequest>) -> Result<Response, AppError> {
-    let filepath= temp_dir().join("model.wasm");
+async fn compile(
+    extract::Json(payload): extract::Json<CompileRequest>,
+) -> Result<Response, AppError> {
+    let filepath = temp_dir().join("model.wasm");
     let filename = filepath.into_os_string().into_string().unwrap();
-    let options = diffeq::CompilerOptions {
+    let options = diffsl::CompilerOptions {
         bitcode_only: false,
         wasm: true,
         standalone: false,
     };
-    compile_text(&payload.text, filename.as_str(), &payload.name, options, true)?;
-    
+    compile_text(
+        &payload.text,
+        filename.as_str(),
+        &payload.name,
+        options,
+        true,
+    )?;
+
     let file = tokio::fs::File::open(Path::new(filename.as_str())).await?;
 
     let stream = ReaderStream::new(file);
@@ -74,11 +87,7 @@ struct AppError(anyhow::Error);
 // Tell axum how to convert `AppError` into a response.
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            self.0.to_string(),
-        )
-            .into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string()).into_response()
     }
 }
 
@@ -122,7 +131,8 @@ mod tests {
 
     #[tokio::test]
     async fn discrete_logistic_model() {
-        let text = String::from("
+        let text = String::from(
+            "
             in = [r, k]
             r { 1 }
             k { 1 }
@@ -146,7 +156,8 @@ mod tests {
                 y,
                 z,
             }
-        ");
+        ",
+        );
         let body = CompileRequest {
             text,
             name: String::from("discrete_logistic_model"),
@@ -159,17 +170,13 @@ mod tests {
             .unwrap();
 
         let app = app();
-        let response = app
-            .oneshot(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         let status = response.status();
         let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         let filename = "model.wasm";
         let mut file = tokio::fs::File::create(filename).await.unwrap();
         file.write_all(&body).await.unwrap();
-
 
         if status != StatusCode::OK {
             println!("Error recieved: {:?}", body);
