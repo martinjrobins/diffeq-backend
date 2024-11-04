@@ -6,7 +6,7 @@ ENV LLVM_SYS_140_PREFIX /usr
 
 # Build EnzymeAD
 WORKDIR /usr/src
-RUN git clone https://github.com/EnzymeAD/Enzyme
+RUN git clone --depth 1 --branch v0.0.142 https://github.com/EnzymeAD/Enzyme
 RUN mkdir -p Enzyme/build
 WORKDIR /usr/src/Enzyme/build
 RUN cmake -DLLVM_DIR=/usr/lib/llvm-14 -DCMAKE_BUILD_TYPE=Release ../enzyme 
