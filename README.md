@@ -58,3 +58,12 @@ This should put the runtime in `libs/lib`, and the headers in `libs/include`.
 ```bash
 fly deploy
 ```
+
+## Deploy fly.io
+
+```bash
+docker build -t diffeq-backend .
+flyctl auth docker
+docker push --format v2s2 diffeq-backend docker://registry.fly.io/diffeq-backend:latest
+fly deploy -c fly.staging.toml -a diffeq-backend-staging -i registry.fly.io/diffeq-backend:latest
+```

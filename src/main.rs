@@ -1,12 +1,7 @@
 use axum::{
-    body::StreamBody,
-    extract,
-    http::{header, HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    routing::{get, post},
-    Router,
+    body::Body, extract, http::{header, HeaderMap, StatusCode}, response::{IntoResponse, Response}, routing::{get, post}, Router
 };
-use diffsl::compile_text;
+use diffsl::{execution::compiler::CompilerMode, Compiler, LlvmModule};
 use hyper::Method;
 use serde::{Deserialize, Serialize};
 use std::{env::temp_dir, net::SocketAddr, path::Path};
@@ -21,10 +16,11 @@ async fn main() {
         .init();
     let app = app();
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind(addr.to_string())
         .await
         .unwrap();
+    println!("listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app).await.unwrap();
 }
 
 fn app() -> Router {
@@ -56,24 +52,17 @@ async fn compile(
 ) -> Result<Response, AppError> {
     let filepath = temp_dir().join("model.wasm");
     let filename = filepath.into_os_string().into_string().unwrap();
-    let options = diffsl::CompilerOptions {
-        bitcode_only: false,
-        wasm: true,
-        standalone: false,
-    };
-    compile_text(
-        &payload.text,
-        filename.as_str(),
-        &payload.name,
-        options,
-        true,
-    )?;
+
+    {
+        let compiler = Compiler::<LlvmModule>::from_discrete_str(payload.text.as_str())?;
+        compiler.module().compile(true, true, filename.as_str())?;
+    }
 
     let file = tokio::fs::File::open(Path::new(filename.as_str())).await?;
 
     let stream = ReaderStream::new(file);
 
-    let body = StreamBody::new(stream);
+    let body = Body::from_stream(stream);
 
     let mut headers = HeaderMap::new();
     headers.insert(header::CONTENT_TYPE, "application/wasm".parse().unwrap());
@@ -111,6 +100,7 @@ mod tests {
     };
     use tokio::io::AsyncWriteExt;
     use tower::ServiceExt;
+    use http_body_util::BodyExt;
 
     #[tokio::test]
     async fn hello() {
@@ -124,8 +114,12 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(),
+            "*",
+        );
 
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = response.into_body().collect().await.unwrap().to_bytes();
         assert_eq!(&body[..], b"Hello, World!");
     }
 
@@ -144,11 +138,11 @@ mod tests {
                 dydt = 0,
                 dzdt = 0,
             }
-            F_i {
+            M_i {
                 dydt,
                 0,
             }
-            G_i {
+            F_i {
                 (r * y) * (1 - (y / k)),
                 (2 * y) - z,
             }
@@ -173,7 +167,7 @@ mod tests {
         let response = app.oneshot(request).await.unwrap();
 
         let status = response.status();
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = response.into_body().collect().await.unwrap().to_bytes();
         let filename = "model.wasm";
         let mut file = tokio::fs::File::create(filename).await.unwrap();
         file.write_all(&body).await.unwrap();

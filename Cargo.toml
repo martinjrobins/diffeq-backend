@@ -6,20 +6,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.6.20"
-serde = { version = "1.0.187", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
-diffsl = { path = "libs/diffeq" }
-tempfile = "3.8.0"
-tokio-util = { version = "0.7.8", features = ["io"] }
-anyhow = "1.0.75"
-hyper = "0.14.27"
-tower-http = { version = "0.4.4", features = ["cors", "trace"] }
-tracing-subscriber = "0.3.17"
+axum = "0.7.7"
+serde = { version = "1.0.214", features = ["derive"] }
+tokio = { version = "1.41.0", features = ["full"] }
+diffsl = { path = "libs/diffeq", features = ["llvm17-0"] }
+tempfile = "3.13.0"
+tokio-util = { version = "0.7.12", features = ["io"] }
+anyhow = "1.0.92"
+hyper = "1.5.0"
+tower-http = { version = "0.6.1", features = ["cors", "trace"] }
+tracing-subscriber = "0.3.18"
 tracing = "0.1.37"
 
 [dev-dependencies]
-tower = { version = "0.4", features = ["util"] }
-serde_json = "1.0.105"
-wasmtime = "12.0.1"
+tower = { version = "0.5.1", features = ["util"] }
+serde_json = "1.0.132"
+wasmtime = "26.0.0"
+http-body-util = "0.1.2"
+axum-macros = "0.4.2"
 
