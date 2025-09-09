@@ -54,7 +54,7 @@ async fn compile(
     let filename = filepath.into_os_string().into_string().unwrap();
 
     {
-        let compiler = Compiler::<LlvmModule>::from_discrete_str(payload.text.as_str())?;
+        let compiler = Compiler::<LlvmModule>::from_discrete_str(payload.text.as_str(), CompilerMode::SingleThreaded)?;
         compiler.module().compile(true, true, filename.as_str())?;
     }
 

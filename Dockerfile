@@ -1,15 +1,15 @@
 FROM rust:bookworm as builder
 
 # Install deps (clang, llvm, sundials, cmake)
-RUN apt-get update && apt-get install -y clang libclang-dev cmake llvm-14-dev llvm-14 libpolly-14-dev git
-ENV LLVM_SYS_140_PREFIX /usr
+RUN apt-get update && apt-get install -y clang libclang-dev cmake llvm-16-dev llvm-16 libpolly-16-dev git libzstd-dev
+ENV LLVM_SYS_160_PREFIX /usr
 
 # Build EnzymeAD
 WORKDIR /usr/src
 RUN git clone --depth 1 --branch v0.0.142 https://github.com/EnzymeAD/Enzyme
 RUN mkdir -p Enzyme/build
 WORKDIR /usr/src/Enzyme/build
-RUN cmake -DLLVM_DIR=/usr/lib/llvm-14 -DCMAKE_BUILD_TYPE=Release ../enzyme 
+RUN cmake -DLLVM_DIR=/usr/lib/llvm-16 -DCMAKE_BUILD_TYPE=Release ../enzyme 
 RUN make
 
 # emscripten
@@ -53,13 +53,11 @@ RUN make install
 WORKDIR /usr/src/app
 
 # Will build and cache the binary and dependent crates in release mode
-RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/local/cargo \
-    --mount=type=cache,target=target \
-    cargo build --release && mv ./target/release/diffeq-backend ./diffeq-backend
+RUN cargo build --release && mv ./target/release/diffeq-backend ./diffeq-backend
 
 # Runtime image
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y clang llvm-14
+RUN apt-get update && apt-get install -y clang llvm-16
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
@@ -82,7 +80,7 @@ ENV LIBRARY_PATH /app/lib
 ENV LD_LIBRARY_PATH /app/lib
 ENV PATH /usr/src/emsdk:/usr/src/emsdk/upstream/emscripten:${PATH}
 ENV EMSDK /usr/src/emsdk
-ENV ENZYME_LIB=/app/lib/LLVMEnzyme-14.so
+ENV ENZYME_LIB=/app/lib/LLVMEnzyme-16.so
 
 # Run the app
 CMD ./diffeq-backend
