@@ -57,7 +57,7 @@ RUN cargo build --release && mv ./target/release/diffeq-backend ./diffeq-backend
 
 # Runtime image
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y clang llvm-16
+RUN apt-get update && apt-get install -y clang-16 llvm-16
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
